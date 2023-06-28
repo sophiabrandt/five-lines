@@ -34,10 +34,10 @@ class Resting implements FallingState {
     }
 
     moveHorizontal(tile: Tile, dx: number) {
-        if (map[playery][playerx + dx + dx].isAir()
-            && !map[playery + 1][playerx + dx].isAir()) {
-            map[playery][playerx + dx + dx] = tile;
-            moveToTile(playerx + dx, playery);
+        if (map[playerY][playerX + dx + dx].isAir()
+            && !map[playerY + 1][playerX + dx].isAir()) {
+            map[playerY][playerX + dx + dx] = tile;
+            moveToTile(playerX + dx, playerY);
         }
     }
 }
@@ -46,6 +46,8 @@ interface Tile {
     isAir(): boolean;
 
     isFallingStone(): boolean;
+
+    isFalling(): boolean;
 
     isStony(): boolean;
 
@@ -62,6 +64,10 @@ interface Tile {
     moveHorizontal(dx: number): void;
 
     moveVertical(dy: number): void;
+
+    drop(): void;
+
+    rest(): void;
 }
 
 class Air implements Tile {
@@ -97,11 +103,21 @@ class Air implements Tile {
     }
 
     moveHorizontal(dx: number) {
-        moveToTile(playerx + dx, playery);
+        moveToTile(playerX + dx, playerY);
     }
 
     moveVertical(dy: number) {
-        moveToTile(playerx, playery + dy);
+        moveToTile(playerX, playerY + dy);
+    }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
     }
 }
 
@@ -140,11 +156,21 @@ class Flux implements Tile {
     }
 
     moveHorizontal(dx: number) {
-        moveToTile(playerx + dx, playery);
+        moveToTile(playerX + dx, playerY);
     }
 
     moveVertical(dy: number) {
-        moveToTile(playerx, playery + dy);
+        moveToTile(playerX, playerY + dy);
+    }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
     }
 }
 
@@ -187,6 +213,16 @@ class Unbreakable implements Tile {
 
     moveVertical(dy: number) {
     }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
+    }
 }
 
 class Player implements Tile {
@@ -225,6 +261,16 @@ class Player implements Tile {
     }
 
     moveVertical(dy: number) {
+    }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
     }
 }
 
@@ -271,9 +317,24 @@ class Stone implements Tile {
 
     moveVertical(dy: number) {
     }
+
+    drop(): void {
+        this.falling = new Falling();
+    }
+
+    rest(): void {
+        this.falling = new Resting();
+    }
+
+    isFalling(): boolean {
+        return this.falling.isFalling();
+    }
 }
 
 class Box implements Tile {
+    constructor(private falling: FallingState) {
+    }
+
     isAir() {
         return false;
     }
@@ -291,7 +352,7 @@ class Box implements Tile {
     }
 
     isFallingBox() {
-        return false;
+        return this.falling.isFalling()
     }
 
     isLock1() {
@@ -308,55 +369,22 @@ class Box implements Tile {
     }
 
     moveHorizontal(dx: number) {
-        if (map[playery][playerx + dx + dx].isAir()
-            && !map[playery + 1][playerx + dx].isAir()) {
-            map[playery][playerx + dx + dx] = this;
-            moveToTile(playerx + dx, playery);
-        }
+        this.falling.moveHorizontal(this, dx);
     }
 
     moveVertical(dy: number) {
     }
-}
 
-class FallingBox implements Tile {
-    isAir() {
-        return false;
+    drop(): void {
+        this.falling = new Falling();
     }
 
-    isStony(): boolean {
-        return false;
+    rest(): void {
+        this.falling = new Resting();
     }
 
-    isFallingStone() {
-        return false;
-    }
-
-    isBoxy(): boolean {
-        return true;
-    }
-
-    isFallingBox() {
-        return true;
-    }
-
-    isLock1() {
-        return false;
-    }
-
-    isLock2() {
-        return false;
-    }
-
-    draw(g: CanvasRenderingContext2D, x: number, y: number) {
-        g.fillStyle = "#8b4513";
-        g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    }
-
-    moveHorizontal(dx: number) {
-    }
-
-    moveVertical(dy: number) {
+    isFalling(): boolean {
+        return this.falling.isFalling()
     }
 }
 
@@ -396,12 +424,22 @@ class Key1 implements Tile {
 
     moveHorizontal(dx: number) {
         removeLock1();
-        moveToTile(playerx + dx, playery);
+        moveToTile(playerX + dx, playerY);
     }
 
     moveVertical(dy: number) {
         removeLock1();
-        moveToTile(playerx, playery + dy);
+        moveToTile(playerX, playerY + dy);
+    }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
     }
 }
 
@@ -444,6 +482,16 @@ class Lock1 implements Tile {
 
     moveVertical(dy: number) {
     }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
+    }
 }
 
 class Key2 implements Tile {
@@ -482,12 +530,22 @@ class Key2 implements Tile {
 
     moveHorizontal(dx: number) {
         removeLock2();
-        moveToTile(playerx + dx, playery);
+        moveToTile(playerX + dx, playerY);
     }
 
     moveVertical(dy: number) {
         removeLock2();
-        moveToTile(playerx, playery + dy);
+        moveToTile(playerX, playerY + dy);
+    }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
     }
 }
 
@@ -530,6 +588,16 @@ class Lock2 implements Tile {
 
     moveVertical(dy: number) {
     }
+
+    drop(): void {
+    }
+
+    rest(): void {
+    }
+
+    isFalling(): boolean {
+        return false;
+    }
 }
 
 interface Input {
@@ -538,30 +606,30 @@ interface Input {
 
 class Right implements Input {
     handle() {
-        map[playery][playerx + 1].moveHorizontal(1);
+        map[playerY][playerX + 1].moveHorizontal(1);
     }
 }
 
 class Left implements Input {
     handle() {
-        map[playery][playerx - 1].moveHorizontal(-1);
+        map[playerY][playerX - 1].moveHorizontal(-1);
     }
 }
 
 class Up implements Input {
     handle() {
-        map[playery - 1][playerx].moveVertical(-1);
+        map[playerY - 1][playerX].moveVertical(-1);
     }
 }
 
 class Down implements Input {
     handle() {
-        map[playery + 1][playerx].moveVertical(1);
+        map[playerY + 1][playerX].moveVertical(1);
     }
 }
 
-let playerx = 1;
-let playery = 1;
+let playerX = 1;
+let playerY = 1;
 let rawMap: RawTile[][] = [
     [2, 2, 2, 2, 2, 2, 2, 2],
     [2, 3, 0, 1, 1, 2, 0, 2],
@@ -589,9 +657,9 @@ function transformTile(tile: RawTile) {
         case RawTile.FALLING_STONE:
             return new Stone(new Falling());
         case RawTile.BOX:
-            return new Box();
+            return new Box(new Resting());
         case RawTile.FALLING_BOX:
-            return new FallingBox();
+            return new Box(new Falling());
         case RawTile.FLUX:
             return new Flux();
         case RawTile.KEY1:
@@ -639,11 +707,11 @@ function removeLock2() {
     }
 }
 
-function moveToTile(newx: number, newy: number) {
-    map[playery][playerx] = new Air();
-    map[newy][newx] = new Player();
-    playerx = newx;
-    playery = newy;
+function moveToTile(newX: number, newY: number) {
+    map[playerY][playerX] = new Air();
+    map[newY][newX] = new Player();
+    playerX = newX;
+    playerY = newY;
 }
 
 function update() {
@@ -673,12 +741,10 @@ function updateTile(x: number, y: number) {
         map[y][x] = new Air();
     } else if ((map[y][x].isBoxy())
         && map[y + 1][x].isAir()) {
-        map[y + 1][x] = new FallingBox();
+        map[y + 1][x] = new Box(new Falling());
         map[y][x] = new Air();
-    } else if (map[y][x].isFallingStone()) {
-        map[y][x] = new Stone(new Resting());
-    } else if (map[y][x].isFallingBox()) {
-        map[y][x] = new Box();
+    } else if (map[y][x].isFalling()) {
+        map[y][x].rest()
     }
 }
 
@@ -705,7 +771,7 @@ function drawMap(g: CanvasRenderingContext2D) {
 
 function drawPlayer(g: CanvasRenderingContext2D) {
     g.fillStyle = "#ff0000";
-    g.fillRect(playerx * TILE_SIZE, playery * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    g.fillRect(playerX * TILE_SIZE, playerY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
 function gameLoop() {
